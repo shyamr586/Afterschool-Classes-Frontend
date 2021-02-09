@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset="UTF-8">
+        <title>After School Classes</title>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> <!-- cdn for vue -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&display=swap" rel="stylesheet">
+        <link rel="icon" type="image/jpg" href="https://lh3.googleusercontent.com/proxy/IQeTOYA9DjlATAzyad4wcA6O9vOzMCEa3f8iJqNaZP_5PJn9Ahpy97CxnaMzO-2RC4xawxfhNV10W_ZbUrEZ9WwGBpM6d8NKFvukXd6u5bd6MCae3oKc"/>
+    </head>
+    <body>
+        <div id="app">
+
+            <div class="centering">
+                <div id="background-tint">
+                    <strong><h1 id="mainhead" v-text=sitename>
+                    </h1>
+                    <h2 class = "pagename">{{page}}</h2></strong>
+                    <div v-if="page == 'Product'">
+                        <button v-if="added==true" class="pagebutton" v-on:click="changePage('Cart')">Cart</button>
+                        <button v-else class="pagebuttondisabled" v-on:click="errormessage(2)">Cart</button>
+                    </div>
+    
+                    <div v-else-if="page == 'Cart'">
+                        <button class="pagebutton" v-on:click="changePage('Product')">Product</button>
+    
+                    </div>
+                    
+                </div>
+            </div>
+        
+            <div v-if="page==='Product'">
+                <div v-for = "classes in classlist">
+                    <div class="card">
+                        <div class="front">
+                            <img v-bind:src="classes.image">
+                        </div>
+                        <div class="back">
+                            <div class="back-info">
+                                <h2>{{classes.subject}}</h2>
+                                <hr>
+                                <div class="details">
+                                    <p>Location : {{classes.location}}</p>
+
+                                    <p>Price : ${{classes.price}}</p>
+
+                                    <p>Spaces : {{classes.spaces}}</p>
+
+                                    <button v-if="spaceAvailable(classes)" class="addcart"
+                                        v-on:click=addtoCart(classes)>Add to cart</button>
+                                    <button v-else class="addcartdisabled" v-on:click=addtoCart(classes) disabled>Add to
+                                        cart</button>
+                                    <div v-if="classes.spaces == 0">
+                                        <p class="footer"><strong>No spaces available</strong></p>
+                                    </div>
+                                    <div v-else-if="lowSpacesAvailable(classes)">
+                                        <p class="footer"><strong>About to run out soon!</strong></p>
+                                    </div>
+                                    <div v-else>
+                                        <p class="footer">Classes available!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>                
+                </div>
+            </div>
+
+            <div v-else-if="page == 'Cart'">
+            
+                <div class="centering">
+    
+                    <div v-for="classes in cartarray">
+    
+                        <div class="card">
+                            <div class="front">
+                                <img v-bind:src="classes.image">
+                            </div>
+                            <div class="back">
+                                <div class="back-info">
+                                    <h2>{{classes.subject}}</h2>
+                                    <hr>
+                                    <div class="details">
+                                        <p>Location : {{classes.location}}</p>
+    
+                                        <p>Price : ${{classes.price*classes.addedtocart}}</p>
+    
+                                        <p>Quantity added to cart : {{classes.addedtocart}}</p>
+    
+                                        <button class="removecart" v-on:click=removefromCart(classes)>Remove</button>
+    
+                                        <div v-if="classes.spaces == 0">
+                                            <p class="footer"><strong>No spaces available</strong></p>
+                                        </div>
+    
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="blankspace">
+                            <!-- blank -->
+                        </div>
+    
+                    </div>
+                        <h2 id = "checkoutheading">Checkout</h2>
+                    <div class="left-pane">
+                        <strong>
+                            <p>Name</p>
+                        </strong>
+                        <input v-model.trim="userdetail.name" v-on:keypress="checkKey">
+                        <br>
+                        <br>
+                        <strong>
+                            <p>Phone Number</p>
+                        </strong>
+                        <input v-model.number="userdetail.phone" type="number">
+                        <br>
+                        <br>
+        
+                    </div>
+                    <div class="right-pane">
+                        <h2 class="centering">Receipt</h2>
+                        <hr>
+                        <div v-for="(classes,key) in cartarray">
+                            <div v-if="classes.addedtocart>0">
+                                <p><span class="ids">{{key+1}}</span>
+                                    <span class="subjects">{{classes.subject}} x{{classes.addedtocart}}</span>
+                                    <span class="prices"style="float:right;">
+                                        ${{classes.price*classes.addedtocart}}</span></p>
+        
+                            </div>
+                        </div>
+                        <hr>
+                        <p>
+                            <span class="ids">{{userdetail.name}}</span>
+                            <span class="subjects">({{userdetail.phone}})</span>
+                            <span class="prices" style="float:right;">${{totalprice}}</span>
+                        </p>
+                    </div>
+                    <div class="centering">
+                        <button v-if = "detailsEntered" class="checkoutbutton" id="fixaligncheckout" v-on:click="checkout">Checkout Now</button>
+                        <button v-else class="checkoutbuttondisabled" id="fixaligncheckout" v-on:click="errormessage(1)">Checkout Now</button>
+                    </div>
+    
+                </div>
+    
+            </div>
+            
+        </div>
+    
+        <script>
+            var app = new Vue({
+                el: "#app",
+                data: {
+                    classlist: [],
+                    page:"Product",
+                    sitename: "After School Classes",
+                    cartarray: [],
+                    userdetail: {
+                        name: "",
+                        phone: "",
+                    },
+                    added: false,
+                    totalprice: 0,
+                },
+        
+                created(){
+                    this.loadFunc();
+                    this.checkCartNotEmpty();
+                    this.checkCartNotEmpty();
+                    this.checkCartNotEmpty();
+                },
+
+                methods: {
+
+                    checkCartNotEmpty(){
+                        this.loadCart();
+                        fetch("https://cw2cst3145.herokuapp.com/collection/cart").then(
+                        function(response){
+                            response.json().then(
+                                function(json){
+                                    app.cartarray = json;
+                                    app.$forceUpdate()
+                                    console.log(json.length);
+                                    
+                                    if (json.length==0){
+                                        console.log("false")
+                                        app.added = false;
+                                    }
+                                    else{
+                                        console.log("true")
+                                        app.added = true;
+                                    }
+                                }
+                            )
+                        })
+                    },
+
+                    errormessage(message){
+                        if (message==1){
+                            alert("Please enter name and phone number.\nMake sure your cart is not empty.");
+                        }
+                        else if(message==2){
+                            alert("Please add items to cart.");
+                        }
+                    
+                    },
+                    /* a get response for getting the lessons from db */
+                    loadFunc(){
+                        fetch("https://cw2cst3145.herokuapp.com/collection/lessons").then(
+                        function(response){
+                            response.json().then(
+                                function(json){
+                                    app.classlist = json;
+                                    app.$forceUpdate();
+                                }
+                            )
+                        })
+                    },
+
+                    changePage(newpage) {
+                        if (newpage == 'Cart') {
+                            this.loadCart();
+                        }
+                        this.page = newpage;
+                        this.checkCartNotEmpty();
+                    },
+
+                    loadCart() {
+                        /* a get repsonse for the cart information and also calculates the total price */
+                        fetch("https://cw2cst3145.herokuapp.com/collection/cart").then(
+                        function(response){
+                            response.json().then(
+                                function(json){
+                                    app.cartarray = json;
+                                    app.$forceUpdate()
+                                    console.log(json.length);
+                                    tots= 0;
+                                    json.forEach((element, index) => {
+                                        console.log("total price for "+index+" :"+tots)
+                                        tots= tots + (element.price*element.addedtocart);
+                                    })
+                                    app.totalprice = tots;
+                                }
+                            )
+                        })
+                    },
+
+                    checkout() {
+                        /* posts to order, changes the added to cart in lessons and empties the cart */
+                        alert("You have checked out.");
+                        fetch("https://cw2cst3145.herokuapp.com/collection/cart").then(
+                        function(response){
+                            response.json().then(
+                                function(json){
+                                    arrayforlessonid = []
+                                    console.log(json.length)
+                                    var totalspacesordered = 0
+                                    var totalprice = 0
+                                    json.forEach((element, index) => {
+                                        arrayforlessonid.push(element.id+": "+element.subject+"x"+element.addedtocart);
+                                        totalspacesordered+=element.addedtocart;
+                                        totalprice+=element.price*element.addedtocart;
+                                        newfetchstring = "https://cw2cst3145.herokuapp.com/collection/lessons/"+element.id;
+                                        revertcartspace = {
+                                            addedtocart: 0
+                                        }
+                                        fetch(newfetchstring, {
+                                            method: 'PUT', // set the HTTP method as 'PUT'
+                                            headers: {
+                                                'Content-Type': 'application/json', // set the data type as JSON
+                                            },
+                                            body: JSON.stringify(revertcartspace), // need to stringify the JSON object
+                                        })
+                                        app.loadFunc();
+                                        app.loadFunc();
+                                        app.loadFunc();
+                                    });
+                                    logmessage = "the lesson id array is "+arrayforlessonid;
+                                    app.addtoOrder(arrayforlessonid,totalspacesordered,totalprice);
+                                    
+                                    console.log(logmessage);
+                                }
+                            )
+                        })
+                        this.emptyCart();
+                        this.emptyCart();
+                        this.emptyCart();
+                        
+                        return false;
+                    },
+                    /* second part of the checkout where the proper fields are added */
+                    addtoOrder(lessonids,spacesordered,total){
+                        
+                        var poststatement = {
+                            name: this.userdetail.name,
+                            phone: this.userdetail.phone,
+                            lessons: lessonids,
+                            spaces: spacesordered,
+                            totalprice: total
+                        }
+
+                        fetch("https://cw2cst3145.herokuapp.com/collection/order", {
+                            method: 'POST', // set the HTTP method as 'PUT'
+                            headers: {
+                                'Content-Type': 'application/json', // set the data type as JSON
+                            },
+                            body: JSON.stringify(poststatement), // need to stringify the JSON object
+                        })
+                        
+                        fetch("https://cw2cst3145.herokuapp.com/collection/cart", {
+                            method: 'DELETE', // set the HTTP method as 'PUT'
+                        })
+                        app.loadCart();
+                        app.loadCart();
+                        app.loadCart();
+
+                    },
+
+                    checkKey(event) {
+                        ascii = event.key.charCodeAt(0);
+                        if (ascii >= 65 && ascii <= 90 || ascii >= 97 && ascii <= 122 || ascii == 32) {
+                            return true;
+                        }
+                        else {
+                            event.preventDefault();
+                        }
+                    },
+                    /* function to remove the lessons from cart, either only the spaces or entire selection if space is 0 */
+                    removefromCart(classes) {
+                        
+                        fetchstring1 = "https://cw2cst3145.herokuapp.com/collection/cart/"+classes.id;
+                        fetchstring2 = "https://cw2cst3145.herokuapp.com/collection/lessons/"+classes.id;
+                        updatestatement = {
+                            addedtocart: classes.addedtocart-1,
+                            spaces: classes.spaces+1
+                        }
+
+                        fetch(fetchstring1).then(
+                        function(response){
+                            console.log(response.ok);
+                            console.log(response);
+                            response.json().then(
+                                function(json){
+                                    console.log(json)
+                                    var spaceincart;
+                                    spaceincart = json.addedtocart;
+                                    
+                                    if (spaceincart==1){
+                                        fetch(fetchstring1, {
+                                            method: 'DELETE', // set the HTTP method as 'DELETE'
+                                        })
+                                        app.loadCart();
+                                        app.loadCart();
+                                        app.loadCart();
+
+                                        fetch(fetchstring2, {
+                                            method: 'PUT', // set the HTTP method as 'PUT'
+                                            headers: {
+                                                'Content-Type': 'application/json', // set the data type as JSON
+                                            },
+                                            body: JSON.stringify(updatestatement), // need to stringify the JSON object
+                                        })
+                                        app.loadFunc();
+                                        app.loadFunc();
+                                        app.loadFunc();
+                                        
+                                    }
+                                    else{
+                                       
+                                        fetch(fetchstring1, {
+                                            method: 'PUT', // set the HTTP method as 'PUT'
+                                            headers: {
+                                                'Content-Type': 'application/json', // set the data type as JSON
+                                            },
+                                            body: JSON.stringify(updatestatement), // need to stringify the JSON object
+                                        })
+                                        app.loadCart();
+                                        app.loadCart();
+                                        app.loadCart();
+
+                                        fetch(fetchstring2, {
+                                            method: 'PUT', // set the HTTP method as 'PUT'
+                                            headers: {
+                                                'Content-Type': 'application/json', // set the data type as JSON
+                                            },
+                                            body: JSON.stringify(updatestatement), // need to stringify the JSON object
+                                        })
+                                        app.loadFunc();
+                                        app.loadFunc();
+                                        app.loadFunc();
+                                       
+                                    }
+                                }
+                            )
+                        })
+                    },
+
+
+                    spaceAvailable(classes) {
+                        if (classes.spaces > 0) {
+                            return true
+                        }
+                        else {
+                            return false
+                        }
+                    },
+
+                    lowSpacesAvailable(classes) {
+                        if (classes.spaces <= 2) {
+                            return true
+                        }
+                        else {
+                            return false
+                        }
+                    },
+                    /* method to add to cart where space and lessons are updated in the lessons and the lessons are 
+                    either posted if lessons added are 0 or put if spaces added are not 0 */
+                    addtoCart(classes) {
+
+                        var objectid = classes.id;
+                        // alert(objectid);
+                        newspace = classes.spaces-1;
+                        newcartno = classes.addedtocart+1;
+                        fetchstring1 = "https://cw2cst3145.herokuapp.com/collection/lessons/"+objectid;
+                        fetchstring2 = "https://cw2cst3145.herokuapp.com/collection/cart/";
+                        fetchstring3 = "https://cw2cst3145.herokuapp.com/collection/cart/"+objectid;
+
+                        updatestatement1 = {
+                            spaces: newspace,
+                            addedtocart: newcartno
+                        };
+
+                        updatestatement2 = {
+                            _id: classes._id,
+                            id: classes.id,
+                            subject: classes.subject,
+                            location: classes.location,
+                            price: classes.price,
+                            spaces: newspace,
+                            addedtocart: newcartno,
+                            image: classes.image
+                        };
+
+                        fetch(fetchstring1, {
+                            method: 'PUT', // set the HTTP method as 'PUT'
+                            headers: {
+                                'Content-Type': 'application/json', // set the data type as JSON
+                            },
+                            body: JSON.stringify(updatestatement1), // need to stringify the JSON object
+                        })
+
+                        fetch(fetchstring3).then(
+                        function(response){
+                            console.log(response.ok);
+                            console.log(response);
+                            response.json().then(
+                                function(json){
+                                    console.log(json)
+                                    fetch(fetchstring3, {
+                                        method: 'PUT', // set the HTTP method as 'PUT'
+                                        headers: {
+                                            'Content-Type': 'application/json', // set the data type as JSON
+                                        },
+                                        body: JSON.stringify(updatestatement1), // need to stringify the JSON object
+                                    })
+                                }).catch((error)=> {
+                                console.log(error);
+                                fetch(fetchstring2, {
+                                    method: 'POST', // set the HTTP method as 'PUT'
+                                    headers: {
+                                        'Content-Type': 'application/json', // set the data type as JSON
+                                    },
+                                    body: JSON.stringify(updatestatement2), // need to stringify the JSON object
+                                }).catch((error) => {
+                                    console.log("ERROR"+error);
+                                })
+                            })
+
+                        })
+
+                        this.checkCartNotEmpty()
+                        this.checkCartNotEmpty()
+                        this.checkCartNotEmpty()
+                        this.loadFunc()
+                        this.loadFunc()
+                        this.loadFunc()
+                    },
+                    /* empty the cart using deleteMany, when checkout is clicked and update the lessons */
+                    emptyCart(){
+                        fetchstring1 = "https://cw2cst3145.herokuapp.com/collection/cart/";
+                        fetchstring2 = "https://cw2cst3145.herokuapp.com/collection/lessons/";
+                        newaddedtocart = {
+                            addedtocart: 0
+                        }
+                        fetch(fetchstring1, {
+                            method: 'DELETE', // set the HTTP method as 'DELETE'
+                        })  
+                        fetch(fetchstring2, {
+                            method: 'PUT', // set the HTTP method as 'PUT'
+                            headers: {
+                                'Content-Type': 'application/json', // set the data type as JSON
+                            },
+                            body: JSON.stringify(newaddedtocart), // need to stringify the JSON object
+                        })   
+                        app.loadCart();
+                        app.loadCart();
+                        app.loadCart();
+                    }
+                 
+                },
+
+                computed: {
+                    detailsEntered(){
+                        scope = this.userdetail;
+                        if ((scope.name == "")){
+                            return false
+                        }
+                        else if (scope.phone == ""){        //sometimes the && does not work hence, else if
+                            return false
+                        }
+                        else if (this.cartarray.length===0){
+                            return false
+                        }
+                        else{
+                            return true
+                        }
+                    },
+                
+                }
+                
+            })
+
+        </script> 
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </body>
+</html>
